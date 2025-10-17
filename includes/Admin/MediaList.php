@@ -403,6 +403,7 @@ class MediaList {
 
     /**
      * Filter posts WHERE clause for missing titles
+     * Uses a subquery to compare post_title with the attachment's filename
      */
     public static function filter_missing_title_where($where, $query) {
         global $wpdb;
@@ -417,8 +418,21 @@ class MediaList {
             return $where;
         }
 
-        // Add condition for empty titles or titles that look like filenames
-        $where .= $wpdb->prepare(" AND ({$wpdb->posts}.post_title = '' OR {$wpdb->posts}.post_title IS NULL OR {$wpdb->posts}.post_title REGEXP %s)", '^(IMG_|DSC_|P[0-9]{8}|[0-9]{8}_|[a-zA-Z0-9_-]+\\.(jpg|jpeg|png|gif|webp))$');
+        // Check if title is empty OR equals the filename (without extension)
+        // This matches the logic used in ScanController and button text detection
+        $where .= " AND (
+            {$wpdb->posts}.post_title = ''
+            OR {$wpdb->posts}.post_title IS NULL
+            OR EXISTS (
+                SELECT 1 FROM {$wpdb->postmeta} pm
+                WHERE pm.post_id = {$wpdb->posts}.ID
+                AND pm.meta_key = '_wp_attached_file'
+                AND (
+                    LOWER({$wpdb->posts}.post_title) = LOWER(SUBSTRING_INDEX(SUBSTRING_INDEX(pm.meta_value, '/', -1), '.', 1))
+                    OR LOWER({$wpdb->posts}.post_title) = LOWER(SUBSTRING_INDEX(pm.meta_value, '/', -1))
+                )
+            )
+        )";
 
         // Remove this filter after use to prevent affecting other queries
         remove_filter('posts_where', [__CLASS__, 'filter_missing_title_where'], 10);
@@ -428,6 +442,7 @@ class MediaList {
 
     /**
      * Filter posts WHERE clause for images WITH meaningful titles
+     * Uses a subquery to ensure title is NOT the same as filename
      */
     public static function filter_has_title_where($where, $query) {
         global $wpdb;
@@ -442,8 +457,19 @@ class MediaList {
             return $where;
         }
 
-        // Add condition for titles that DON'T look like filenames
-        $where .= $wpdb->prepare(" AND {$wpdb->posts}.post_title != '' AND {$wpdb->posts}.post_title IS NOT NULL AND {$wpdb->posts}.post_title NOT REGEXP %s", '^(IMG_|DSC_|P[0-9]{8}|[0-9]{8}_|[a-zA-Z0-9_-]+\\.(jpg|jpeg|png|gif|webp))$');
+        // Check that title exists AND is NOT the same as filename
+        // This matches the logic used in ScanController and button text detection
+        $where .= " AND {$wpdb->posts}.post_title != ''
+            AND {$wpdb->posts}.post_title IS NOT NULL
+            AND NOT EXISTS (
+                SELECT 1 FROM {$wpdb->postmeta} pm
+                WHERE pm.post_id = {$wpdb->posts}.ID
+                AND pm.meta_key = '_wp_attached_file'
+                AND (
+                    LOWER({$wpdb->posts}.post_title) = LOWER(SUBSTRING_INDEX(SUBSTRING_INDEX(pm.meta_value, '/', -1), '.', 1))
+                    OR LOWER({$wpdb->posts}.post_title) = LOWER(SUBSTRING_INDEX(pm.meta_value, '/', -1))
+                )
+            )";
 
         // Remove this filter after use to prevent affecting other queries
         remove_filter('posts_where', [__CLASS__, 'filter_has_title_where'], 10);
