@@ -423,12 +423,36 @@ class ScanController {
         }
         
         Logger::log("[SCAN] Image $image_id alt text: '$alt_text' (status: $alt_status)");
-        
-        // Check title attribute (from the img tag if available)
+
+        // Check WordPress attachment post title (more important than HTML title attribute)
         $title_attr = '';
         $title_status = 'missing';
-        
-        if (!empty($image_data['img_tag'])) {
+
+        if (!$is_virtual && $attachment) {
+            $post_title = get_the_title($image_id);
+            $image_filename = basename(get_attached_file($image_id));
+            $filename_without_ext = pathinfo($image_filename, PATHINFO_FILENAME);
+
+            // Check if post title is meaningful (not just the filename)
+            $has_meaningful_title = !empty($post_title) &&
+                                   strtolower($post_title) !== strtolower($filename_without_ext) &&
+                                   strtolower($post_title) !== strtolower($image_filename);
+
+            if ($has_meaningful_title) {
+                $title_attr = $post_title;
+                $title_status = 'present';
+                Logger::log("[SCAN] Found meaningful WordPress post title: '$post_title' (status: $title_status)");
+            } else {
+                Logger::log("[SCAN] Post title is filename-based or empty: '$post_title'");
+                // Also check for HTML title attribute as fallback
+                if (!empty($image_data['img_tag']) && preg_match('/title=["\']([^"\']*)["\']/', $image_data['img_tag'], $title_match)) {
+                    $title_attr = $title_match[1];
+                    $title_status = empty($title_attr) ? 'empty' : 'present';
+                    Logger::log("[SCAN] Found HTML title attribute: '$title_attr'");
+                }
+            }
+        } elseif (!empty($image_data['img_tag'])) {
+            // For virtual images, check HTML title attribute only
             Logger::log("[SCAN] Checking img tag for title attribute: " . substr($image_data['img_tag'], 0, 200));
             if (preg_match('/title=["\']([^"\']*)["\']/', $image_data['img_tag'], $title_match)) {
                 $title_attr = $title_match[1];
@@ -438,7 +462,7 @@ class ScanController {
                 Logger::log("[SCAN] No title attribute found in img tag");
             }
         } else {
-            Logger::log("[SCAN] No img tag available for title check (featured image)");
+            Logger::log("[SCAN] No title information available (virtual image without img tag)");
         }
         
         // Extract context information
