@@ -259,6 +259,12 @@ class MediaList {
         echo '<option value="missing_title"' . selected($current_filter, 'missing_title', false) . '>' . esc_html__('Missing title', 'pic-pilot-meta') . '</option>';
         echo '<option value="missing_both"' . selected($current_filter, 'missing_both', false) . '>' . esc_html__('Missing alt tag and title', 'pic-pilot-meta') . '</option>';
         echo '</optgroup>';
+
+        echo '<optgroup label="' . esc_attr__('By Having Attributes', 'pic-pilot-meta') . '">';
+        echo '<option value="has_alt"' . selected($current_filter, 'has_alt', false) . '>' . esc_html__('Has Alt tag', 'pic-pilot-meta') . '</option>';
+        echo '<option value="has_title"' . selected($current_filter, 'has_title', false) . '>' . esc_html__('Has title', 'pic-pilot-meta') . '</option>';
+        echo '<option value="has_both"' . selected($current_filter, 'has_both', false) . '>' . esc_html__('Has alt tag and title', 'pic-pilot-meta') . '</option>';
+        echo '</optgroup>';
         
         // Tag options
         if (!empty($tag_options)) {
@@ -364,6 +370,29 @@ class MediaList {
             ]);
             // Also filter by title
             add_filter('posts_where', [__CLASS__, 'filter_missing_title_where'], 10, 2);
+        } elseif ($filter === 'has_alt') {
+            // Images WITH alt text
+            $query->set('meta_query', [
+                [
+                    'key' => '_wp_attachment_image_alt',
+                    'value' => '',
+                    'compare' => '!='
+                ]
+            ]);
+        } elseif ($filter === 'has_title') {
+            // Images with meaningful titles - handled in posts_where filter
+            add_filter('posts_where', [__CLASS__, 'filter_has_title_where'], 10, 2);
+        } elseif ($filter === 'has_both') {
+            // Images with both alt text and meaningful titles
+            $query->set('meta_query', [
+                [
+                    'key' => '_wp_attachment_image_alt',
+                    'value' => '',
+                    'compare' => '!='
+                ]
+            ]);
+            // Also filter by title
+            add_filter('posts_where', [__CLASS__, 'filter_has_title_where'], 10, 2);
         }
 
         // Ensure we only get image attachments
@@ -393,6 +422,31 @@ class MediaList {
 
         // Remove this filter after use to prevent affecting other queries
         remove_filter('posts_where', [__CLASS__, 'filter_missing_title_where'], 10);
+
+        return $where;
+    }
+
+    /**
+     * Filter posts WHERE clause for images WITH meaningful titles
+     */
+    public static function filter_has_title_where($where, $query) {
+        global $wpdb;
+
+        // Only apply to our specific query
+        if (!is_admin() || !isset($_GET['picpilot_alt_filter'])) {
+            return $where;
+        }
+
+        $filter = sanitize_text_field($_GET['picpilot_alt_filter']);
+        if ($filter !== 'has_title' && $filter !== 'has_both') {
+            return $where;
+        }
+
+        // Add condition for titles that DON'T look like filenames
+        $where .= $wpdb->prepare(" AND {$wpdb->posts}.post_title != '' AND {$wpdb->posts}.post_title IS NOT NULL AND {$wpdb->posts}.post_title NOT REGEXP %s", '^(IMG_|DSC_|P[0-9]{8}|[0-9]{8}_|[a-zA-Z0-9_-]+\\.(jpg|jpeg|png|gif|webp))$');
+
+        // Remove this filter after use to prevent affecting other queries
+        remove_filter('posts_where', [__CLASS__, 'filter_has_title_where'], 10);
 
         return $where;
     }
