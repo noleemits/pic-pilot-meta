@@ -579,7 +579,11 @@ class MediaList {
         
         // Check what's missing for "Generate Both" button
         $is_missing_alt = empty($alt_text);
-        $is_missing_title = empty($title) || strpos(strtolower($title), strtolower(pathinfo($filename, PATHINFO_FILENAME))) !== false;
+        // Check if title is meaningful (not just filename)
+        $filename_without_ext = pathinfo($filename, PATHINFO_FILENAME);
+        $is_missing_title = empty($title) ||
+                           strtolower($title) === strtolower($filename_without_ext) ||
+                           strtolower($title) === strtolower($filename);
         $is_missing_both = $is_missing_alt && $is_missing_title;
         
         echo '<div class="picpilot-column-wrapper">';
@@ -591,10 +595,20 @@ class MediaList {
         
         // Check if alt text already exists
         $existing_alt = get_post_meta($post_id, '_wp_attachment_image_alt', true);
-        $alt_button_text = !empty($existing_alt) ? 
-            esc_html__('Regen Alt', 'pic-pilot-meta') : 
+        $alt_button_text = !empty($existing_alt) ?
+            esc_html__('Regen Alt', 'pic-pilot-meta') :
             esc_html__('Gen Alt', 'pic-pilot-meta');
-        
+
+        // Check if title looks like a meaningful title (not just filename)
+        $existing_title = get_the_title($post_id);
+        $filename_without_ext = pathinfo($filename, PATHINFO_FILENAME);
+        $has_meaningful_title = !empty($existing_title) &&
+                               strtolower($existing_title) !== strtolower($filename_without_ext) &&
+                               strtolower($existing_title) !== strtolower($filename);
+        $title_button_text = $has_meaningful_title ?
+            esc_html__('Regen Title', 'pic-pilot-meta') :
+            esc_html__('Gen Title', 'pic-pilot-meta');
+
         // Prepare tooltips for each button if hover info is enabled
         $alt_tooltip = '';
         $title_tooltip = '';
@@ -638,7 +652,7 @@ class MediaList {
             '<button type="button" class="button button-small picpilot-generate-meta" data-id="%d" data-type="title"%s>%s</button>',
             esc_attr($post_id),
             $title_tooltip ? ' title="' . esc_attr($title_tooltip) . '"' : '',
-            esc_html__('Gen Title', 'pic-pilot-meta')
+            esc_html($title_button_text)
         );
 
         // Duplicate button
