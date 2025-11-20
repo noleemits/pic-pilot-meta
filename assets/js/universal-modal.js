@@ -171,17 +171,58 @@
     }
 
 
+    function checkIfSVG(attachmentId, imageUrl) {
+        // Check file extension from URL
+        if (imageUrl && imageUrl.toLowerCase().endsWith('.svg')) {
+            return true;
+        }
+
+        // Check MIME type from attachment details
+        const mimeField = document.querySelector('.attachment-details .details[data-setting="mime"] .value, .details[data-setting="mime"]');
+        if (mimeField && mimeField.textContent.includes('svg')) {
+            return true;
+        }
+
+        // Check filename in attachment details
+        const filenameField = document.querySelector('.attachment-details .filename, .details[data-setting="filename"]');
+        if (filenameField && filenameField.textContent.toLowerCase().endsWith('.svg')) {
+            return true;
+        }
+
+        // Try to get from WordPress media attachment object
+        if (attachmentId && typeof wp !== 'undefined' && wp.media) {
+            try {
+                const attachment = wp.media.attachment(attachmentId);
+                if (attachment && attachment.get) {
+                    const filename = attachment.get('filename');
+                    const mime = attachment.get('mime');
+                    if ((filename && filename.toLowerCase().endsWith('.svg')) ||
+                        (mime && mime.includes('svg'))) {
+                        return true;
+                    }
+                }
+            } catch (e) {
+                // Continue
+            }
+        }
+
+        return false;
+    }
+
     function openUniversalModal(attachmentId = null) {
         // Remove existing modal
         const existingModal = document.getElementById(CONFIG.modalId);
         if (existingModal) {
             existingModal.remove();
         }
-        
+
         // Get current image data
         const currentTitle = getImageTitle(attachmentId);
         const currentAlt = getImageAlt(attachmentId);
         const imageUrl = getImageUrl(attachmentId);
+
+        // Check if this is an SVG file
+        const isSVG = checkIfSVG(attachmentId, imageUrl);
         
         // Get settings from global object
         const settings = window.picPilotAttachment?.settings || {};
@@ -195,17 +236,40 @@
         const isMissingBoth = isMissingAlt && isMissingTitle;
         const showGenerateBoth = autoGenerateBothEnabled && isMissingBoth;
         
+        // Create SVG warning section
+        const svgWarningSection = isSVG ? `
+            <div style="margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1)); border: 2px solid #ffd93d; border-radius: 8px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <span style="font-size: 32px;">⚠️</span>
+                    <div>
+                        <strong style="color: #f59e0b; font-size: 15px; display: block; margin-bottom: 4px;">SVG File Detected</strong>
+                        <span style="color: #92400e; font-size: 12px;">AI vision models cannot process vector files</span>
+                    </div>
+                </div>
+                <div style="padding: 12px; background: rgba(255, 255, 255, 0.7); border-radius: 6px; font-size: 13px; line-height: 1.6; color: #78350f;">
+                    <p style="margin: 0 0 10px 0;"><strong>Why SVG files can't be processed:</strong></p>
+                    <p style="margin: 0 0 10px 0;">AI vision models (OpenAI GPT-4o, Google Gemini) can only analyze raster images like JPG, PNG, GIF, and WebP. SVG files are vector graphics (code-based), not pixel-based images.</p>
+                    <p style="margin: 0;"><strong>What you can do:</strong></p>
+                    <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                        <li>Use descriptive filenames (e.g., "company-logo.svg")</li>
+                        <li>Add metadata manually</li>
+                        <li>Convert to PNG/JPG for AI processing</li>
+                    </ul>
+                </div>
+            </div>
+        ` : '';
+
         // Create keywords section conditionally
-        const keywordsSection = showKeywords ? `
+        const keywordsSection = showKeywords && !isSVG ? `
             <div style="margin-bottom: 20px; padding: 12px; background: #f8f9fa; border-radius: 6px;">
                 <label style="display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px;">🎯 Keywords (optional):</label>
                 <input type="text" id="pic-pilot-universal-keywords" placeholder="e.g., business person, outdoor scene, product photo" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box;">
                 <p style="margin: 6px 0 0 0; font-size: 11px; color: #666;">Provide context for better AI results</p>
             </div>
         ` : '';
-        
+
         // Create "Generate Both" section conditionally
-        const generateBothSection = showGenerateBoth ? `
+        const generateBothSection = showGenerateBoth && !isSVG ? `
             <div style="margin-bottom: 15px; padding: 12px; background: #fff8e1; border: 1px solid #ffcc02; border-radius: 6px; text-align: center;">
                 <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
                     <button type="button" id="pic-pilot-generate-both" data-attachment-id="${attachmentId}" style="background: #ffcc02; color: #333; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">
@@ -219,68 +283,135 @@
         
         // Create combined advanced section
         const advancedSection = dangerousRenameEnabled ? `
-            <div style="margin-top: 15px; padding: 12px; background: #fdf2f2; border: 1px solid #fecaca; border-radius: 6px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                    <span style="font-size: 13px; font-weight: 600; color: #991b1b;">📝 Advanced</span>
-                    <span style="font-size: 11px; color: #991b1b;">⚠️ Use with caution</span>
+            <div style="margin-top: 20px; padding: 16px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.05)); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <span style="font-size: 14px; font-weight: 600; color: #991b1b;">📝 Advanced</span>
+                    <span style="font-size: 12px; color: #991b1b; background: rgba(239, 68, 68, 0.1); padding: 4px 8px; border-radius: 6px;">⚠️ Use with caution</span>
                 </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <button type="button" id="pic-pilot-rename-file" data-attachment-id="${attachmentId}" style="background: #dc2626; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <button type="button" id="pic-pilot-rename-file" data-attachment-id="${attachmentId}" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2); transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.3)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(239, 68, 68, 0.2)'">
                         Generate Filename
                     </button>
-                    <div id="pic-pilot-rename-status" style="flex: 1; padding: 4px; border-radius: 4px; font-size: 11px; display: none;"></div>
+                    <div id="pic-pilot-rename-status" style="flex: 1; padding: 8px; border-radius: 6px; font-size: 11px; display: none;"></div>
                 </div>
             </div>
         ` : '';
         
-        // Create comprehensive modal HTML
+        // Create comprehensive modal HTML with modern styling
         const modalHtml = `
-            <div id="${CONFIG.modalId}" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999999; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
-                <div style="background: #fff; border-radius: 8px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3); position: relative;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #ddd; background: #2271b1; color: #fff; border-radius: 8px 8px 0 0;">
-                        <h2 style="margin: 0; font-size: 18px;">🤖 AI Tools & Metadata</h2>
-                        <button type="button" onclick="document.getElementById('${CONFIG.modalId}').remove()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">×</button>
+            <div id="${CONFIG.modalId}" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(10, 14, 39, 0.85);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                z-index: 999999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                box-sizing: border-box;
+                animation: ppModalFadeIn 0.3s ease-out;
+            ">
+                <style>
+                    @keyframes ppModalFadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    @keyframes ppModalSlideUp {
+                        from { opacity: 0; transform: translateY(20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    #${CONFIG.modalId} .pp-modal-content {
+                        animation: ppModalSlideUp 0.3s ease-out;
+                    }
+                </style>
+                <div class="pp-modal-content" style="
+                    background: #fff;
+                    border-radius: 16px;
+                    max-width: 750px;
+                    width: 100%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                    position: relative;
+                ">
+                    <!-- Modern gradient header -->
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 24px;
+                        border-bottom: 1px solid #e5e7eb;
+                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        color: #fff;
+                        border-radius: 16px 16px 0 0;
+                    ">
+                        <h2 style="margin: 0; font-size: 20px; font-weight: 700;">🤖 AI Tools & Metadata</h2>
+                        <button type="button" onclick="document.getElementById('${CONFIG.modalId}').remove()" style="
+                            background: rgba(255, 255, 255, 0.2);
+                            border: 1px solid rgba(255, 255, 255, 0.3);
+                            color: #fff;
+                            font-size: 24px;
+                            cursor: pointer;
+                            padding: 0;
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            transition: all 0.2s ease;
+                        " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">×</button>
                     </div>
-                    
-                    <div style="padding: 20px;">
-                        <div style="text-align: center; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 6px;">
-                            ${imageUrl ? `<img src="${imageUrl}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 4px; margin-bottom: 10px;" />` : '<div style="padding: 40px; background: #eee; border-radius: 4px; margin-bottom: 10px;">Image preview not available</div>'}
-                            <div style="font-size: 13px; color: #666;">
-                                <strong>Attachment ID:</strong> ${attachmentId || 'Unknown'}<br>
-                                <strong>Current Title:</strong> ${currentTitle || 'No title'}<br>
+
+                    <div style="padding: 24px;">
+                        <!-- Image preview card -->
+                        <div style="text-align: center; margin-bottom: 24px; padding: 20px; background: rgba(102, 126, 234, 0.03); border: 1px solid rgba(102, 126, 234, 0.1); border-radius: 12px;">
+                            ${imageUrl ? `<img src="${imageUrl}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />` : '<div style="padding: 40px; background: #f3f4f6; border-radius: 8px; margin-bottom: 12px; color: #9ca3af;">Image preview not available</div>'}
+                            <div style="font-size: 13px; color: #6b7280; line-height: 1.8;">
+                                <strong style="color: #374151;">Attachment ID:</strong> ${attachmentId || 'Unknown'}<br>
+                                <strong style="color: #374151;">Current Title:</strong> ${currentTitle || '<span style="color: #ef4444;">No title</span>'}<br>
                                 <strong>Current Alt Text:</strong> ${currentAlt || 'No alt text'}
                             </div>
                         </div>
 
+                        ${svgWarningSection}
                         ${keywordsSection}
                         ${generateBothSection}
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px;">
-                            <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; text-align: center; background: #fafafa;">
-                                <div style="margin-bottom: 8px;">
-                                    <span style="font-size: 14px; font-weight: 600; color: #374151;">📝 Title</span>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+                            <!-- Title Generation Card -->
+                            <div style="border: 1px solid rgba(102, 126, 234, 0.15); border-radius: 10px; padding: 16px; text-align: center; background: rgba(102, 126, 234, 0.03); transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.15)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">
+                                <div style="margin-bottom: 10px;">
+                                    <span style="font-size: 15px; font-weight: 600; color: #374151;">📝 Title</span>
                                 </div>
-                                <button type="button" id="pic-pilot-generate-title" data-attachment-id="${attachmentId}" style="background: #2563eb; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; width: 100%;">
-                                    ${currentTitle ? 'Regenerate' : 'Generate'}
+                                <button type="button" id="pic-pilot-generate-title" data-attachment-id="${attachmentId}" ${isSVG ? 'disabled' : ''} style="background: ${isSVG ? '#e5e7eb' : 'linear-gradient(135deg, #667eea, #764ba2)'}; color: #fff; border: none; padding: 10px 14px; border-radius: 8px; cursor: ${isSVG ? 'not-allowed' : 'pointer'}; font-size: 13px; font-weight: 600; width: 100%; transition: all 0.2s ease; box-shadow: ${isSVG ? 'none' : '0 2px 8px rgba(102, 126, 234, 0.2)'};" ${!isSVG ? `onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.3)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(102, 126, 234, 0.2)'"` : ''}>
+                                    ${isSVG ? 'Not Available' : (currentTitle ? 'Regenerate' : 'Generate')}
                                 </button>
-                                <div id="pic-pilot-title-status" style="margin-top: 8px; padding: 6px; border-radius: 4px; font-size: 11px; display: none;"></div>
+                                <div id="pic-pilot-title-status" style="margin-top: 10px; padding: 8px; border-radius: 6px; font-size: 11px; display: none;"></div>
                             </div>
 
-                            <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; text-align: center; background: #fafafa;">
-                                <div style="margin-bottom: 8px;">
-                                    <span style="font-size: 14px; font-weight: 600; color: #374151;">🏷️ Alt Text</span>
+                            <!-- Alt Text Generation Card -->
+                            <div style="border: 1px solid rgba(102, 126, 234, 0.15); border-radius: 10px; padding: 16px; text-align: center; background: rgba(102, 126, 234, 0.03); transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.15)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">
+                                <div style="margin-bottom: 10px;">
+                                    <span style="font-size: 15px; font-weight: 600; color: #374151;">🏷️ Alt Text</span>
                                 </div>
-                                <button type="button" id="pic-pilot-generate-alt" data-attachment-id="${attachmentId}" style="background: #2563eb; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; width: 100%;">
-                                    ${currentAlt ? 'Regenerate' : 'Generate'}
+                                <button type="button" id="pic-pilot-generate-alt" data-attachment-id="${attachmentId}" ${isSVG ? 'disabled' : ''} style="background: ${isSVG ? '#e5e7eb' : 'linear-gradient(135deg, #667eea, #764ba2)'}; color: #fff; border: none; padding: 10px 14px; border-radius: 8px; cursor: ${isSVG ? 'not-allowed' : 'pointer'}; font-size: 13px; font-weight: 600; width: 100%; transition: all 0.2s ease; box-shadow: ${isSVG ? 'none' : '0 2px 8px rgba(102, 126, 234, 0.2)'};" ${!isSVG ? `onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.3)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(102, 126, 234, 0.2)'"` : ''}>
+                                    ${isSVG ? 'Not Available' : (currentAlt ? 'Regenerate' : 'Generate')}
                                 </button>
-                                <div id="pic-pilot-alt-status" style="margin-top: 8px; padding: 6px; border-radius: 4px; font-size: 11px; display: none;"></div>
+                                <div id="pic-pilot-alt-status" style="margin-top: 10px; padding: 8px; border-radius: 6px; font-size: 11px; display: none;"></div>
                             </div>
-                            
-                            <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; text-align: center; background: #f0fdf4;">
-                                <div style="margin-bottom: 8px;">
-                                    <span style="font-size: 14px; font-weight: 600; color: #166534;">🔄 Duplicate</span>
+
+                            <!-- Duplicate Card -->
+                            <div style="border: 1px solid rgba(67, 233, 123, 0.2); border-radius: 10px; padding: 16px; text-align: center; background: rgba(67, 233, 123, 0.03); transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(67, 233, 123, 0.15)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">
+                                <div style="margin-bottom: 10px;">
+                                    <span style="font-size: 15px; font-weight: 600; color: #166534;">🔄 Duplicate</span>
                                 </div>
-                                <button type="button" id="pic-pilot-duplicate" data-attachment-id="${attachmentId}" style="background: #16a34a; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; width: 100%;">
+                                <button type="button" id="pic-pilot-duplicate" data-attachment-id="${attachmentId}" style="background: linear-gradient(135deg, #43e97b, #38f9d7); color: #064e3b; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; width: 100%; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(67, 233, 123, 0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(67, 233, 123, 0.3)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(67, 233, 123, 0.2)'">
                                     Create Copy
                                 </button>
                                 <div id="pic-pilot-duplicate-status" style="margin-top: 8px; padding: 6px; border-radius: 4px; font-size: 11px; display: none;"></div>
@@ -410,25 +541,73 @@
     }
 
     function getImageUrl(attachmentId) {
-        // Try to get image URL from various sources
-        const imgSelectors = [
-            `.attachment-preview img`,
-            `.details-image img`,
+        // Priority 1: Use WordPress media API (most reliable)
+        if (attachmentId && typeof wp !== 'undefined' && wp.media) {
+            try {
+                const attachment = wp.media.attachment(attachmentId);
+                if (attachment && attachment.get) {
+                    const url = attachment.get('url');
+                    if (url) {
+                        return url;
+                    }
+                }
+            } catch (e) {
+                // Continue to fallback methods
+            }
+        }
+
+        // Priority 2: Try attachment-specific selectors
+        const specificSelectors = [
+            // WordPress media modal with attachment ID
+            `.media-modal .attachment[data-id="${attachmentId}"] img`,
             `.media-modal img[data-attachment-id="${attachmentId}"]`,
-            `.attachment img`
+
+            // Attachment details sidebar (very reliable when open)
+            `.attachment-details[data-id="${attachmentId}"] .details-image img`,
+            `.attachment-details .details-image img`,
+
+            // Page builders with attachment context
+            `.elementor-modal .attachment[data-id="${attachmentId}"] img`,
+            `.vc_ui-panel .attachment[data-id="${attachmentId}"] img`,
+            `.et-fb-modal .attachment[data-id="${attachmentId}"] img`
         ];
-        
-        for (const selector of imgSelectors) {
+
+        for (const selector of specificSelectors) {
             const img = document.querySelector(selector);
-            if (img && img.src) {
+            if (img && img.src && !img.src.includes('placeholder')) {
                 return img.src;
             }
         }
 
-        // Fallback: try to construct URL if we have attachment data
-        const urlField = document.querySelector('input[name*="[url]"], #attachment-details-copy-link');
+        // Priority 3: Look for currently selected/focused attachment
+        const selectedAttachment = document.querySelector('.attachment.selected, .attachment.details');
+        if (selectedAttachment) {
+            const dataId = selectedAttachment.getAttribute('data-id');
+            if (dataId === String(attachmentId)) {
+                const img = selectedAttachment.querySelector('img');
+                if (img && img.src) {
+                    return img.src;
+                }
+            }
+        }
+
+        // Priority 4: Get URL from attachment details input field
+        const urlField = document.querySelector('#attachment-details-two-column-copy-link, #attachment-details-copy-link, input[name*="[url]"]');
         if (urlField && urlField.value && urlField.value.includes('/uploads/')) {
             return urlField.value;
+        }
+
+        // Priority 5: Generic fallback (least reliable)
+        const genericSelectors = [
+            `.attachment-preview img`,
+            `.details-image img`
+        ];
+
+        for (const selector of genericSelectors) {
+            const img = document.querySelector(selector);
+            if (img && img.src && !img.src.includes('placeholder')) {
+                return img.src;
+            }
         }
 
         return '';

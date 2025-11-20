@@ -19,6 +19,18 @@ class Settings {
             );
         });
         add_action('admin_post_picpilot_clear_log', [self::class, 'handle_clear_log']);
+
+        // Enqueue settings page styles
+        add_action('admin_enqueue_scripts', function($hook) {
+            if ('settings_page_picpilot-meta-settings' === $hook) {
+                wp_enqueue_style(
+                    'picpilot-settings',
+                    plugin_dir_url(dirname(__DIR__)) . 'assets/css/settings.css',
+                    [],
+                    '2.2.2'
+                );
+            }
+        });
     }
 
 

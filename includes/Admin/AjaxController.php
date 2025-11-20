@@ -217,6 +217,24 @@ class AjaxController {
             return self::log_and_fail($id, 'Invalid image ID');
         }
 
+        // Check if file is SVG - AI vision models cannot process vector files
+        $file_path = \get_attached_file($id);
+        $file_type = \wp_check_filetype($file_path);
+
+        if ($file_type['ext'] === 'svg' || $file_type['type'] === 'image/svg+xml') {
+            // Clean up request tracking
+            unset($active_requests[$request_key]);
+            \set_transient('picpilot_active_requests', $active_requests, 60);
+
+            Logger::log("[AJAX] SVG file detected - ID: $id - Cannot process with AI vision models");
+
+            \wp_send_json_error([
+                'message' => \__('SVG files cannot be processed with AI vision models. AI can only analyze raster images (JPG, PNG, GIF, WebP). For SVG files, please use descriptive filenames or add metadata manually.', 'pic-pilot-meta'),
+                'is_svg' => true
+            ]);
+            return;
+        }
+
         $settings = \get_option('picpilot_meta_settings', []);
         $provider = $settings['ai_provider'] ?? 'openai';
         
@@ -445,6 +463,18 @@ class AjaxController {
 
         if (!\current_user_can('upload_files')) {
             \wp_send_json_error(['message' => 'Insufficient permissions']);
+        }
+
+        // Check if file is SVG - AI vision models cannot process vector files
+        $file_path = \get_attached_file($id);
+        $file_type = \wp_check_filetype($file_path);
+
+        if ($file_type['ext'] === 'svg' || $file_type['type'] === 'image/svg+xml') {
+            Logger::log("[AJAX] SVG file detected in generate_both - ID: $id");
+            \wp_send_json_error([
+                'message' => \__('SVG files cannot be processed with AI vision models. AI can only analyze raster images (JPG, PNG, GIF, WebP). For SVG files, please use descriptive filenames or add metadata manually.', 'pic-pilot-meta'),
+                'is_svg' => true
+            ]);
         }
 
         // Check if both generation features are enabled

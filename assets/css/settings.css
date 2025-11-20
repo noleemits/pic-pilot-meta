@@ -1,0 +1,414 @@
+/**
+ * Pic Pilot Meta Settings Styles - Modern Design
+ */
+
+/* Use CSS variables matching our color scheme */
+:root {
+    --pp-primary: #667eea;
+    --pp-primary-gradient: linear-gradient(135deg, #667eea, #764ba2);
+    --pp-success: #43e97b;
+    --pp-warning: #ffd93d;
+    --pp-error: #ff6b6b;
+    --pp-glass-bg: rgba(102, 126, 234, 0.05);
+    --pp-glass-border: rgba(102, 126, 234, 0.15);
+    --pp-radius-md: 8px;
+    --pp-radius-lg: 12px;
+    --pp-shadow-sm: 0 2px 8px rgba(102, 126, 234, 0.15);
+    --pp-shadow-md: 0 4px 16px rgba(102, 126, 234, 0.2);
+}
+
+/* =================================================================
+   SETTINGS PAGE WRAPPER
+   ================================================================= */
+
+.wrap h1 {
+    background: var(--pp-primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+/* =================================================================
+   SETTINGS FORMS & TABLES
+   ================================================================= */
+
+.form-table {
+    background: #fff;
+    border: 1px solid var(--pp-glass-border);
+    border-radius: var(--pp-radius-lg);
+    padding: 20px;
+    box-shadow: var(--pp-shadow-sm);
+    margin-top: 20px;
+}
+
+.form-table th {
+    padding: 16px 12px;
+    font-weight: 600;
+    color: #374151;
+    width: 25%;
+}
+
+.form-table td {
+    padding: 16px 12px;
+}
+
+.form-table tr {
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.form-table tr:last-child {
+    border-bottom: none;
+}
+
+/* =================================================================
+   FORM INPUTS
+   ================================================================= */
+
+.form-table input[type="text"],
+.form-table input[type="password"],
+.form-table textarea,
+.form-table select,
+.regular-text,
+.large-text {
+    padding: 10px 14px !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: var(--pp-radius-md) !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
+}
+
+.form-table input[type="text"]:focus,
+.form-table input[type="password"]:focus,
+.form-table textarea:focus,
+.form-table select:focus {
+    border-color: var(--pp-primary) !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+    outline: none !important;
+}
+
+.form-table textarea {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, sans-serif;
+    padding: 10px 20px !important; /* Extra horizontal padding for better readability */
+}
+
+/* Checkboxes with labels */
+.form-table label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-table input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* =================================================================
+   RADIO BUTTONS (for prompt modes)
+   ================================================================= */
+
+.form-table label[style*="margin-right"] {
+    padding: 8px 14px;
+    background: var(--pp-glass-bg);
+    border: 1px solid var(--pp-glass-border);
+    border-radius: var(--pp-radius-md);
+    transition: all 0.2s ease;
+    margin-bottom: 12px; /* Add vertical spacing between radio options */
+    display: inline-block; /* Make them behave as blocks for proper spacing */
+}
+
+.form-table label[style*="margin-right"]:hover {
+    border-color: var(--pp-primary);
+    background: rgba(102, 126, 234, 0.08);
+}
+
+.form-table input[type="radio"]:checked + * {
+    font-weight: 600;
+}
+
+/* =================================================================
+   DEFAULT VALUE DISPLAY
+   ================================================================= */
+
+.form-table div[style*="background: #f0f0f1"] {
+    padding: 12px !important;
+    background: var(--pp-glass-bg) !important;
+    border: 1px solid var(--pp-glass-border) !important;
+    border-radius: var(--pp-radius-md) !important;
+    color: #64748b !important;
+    font-style: italic;
+    max-width: 100% !important;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* =================================================================
+   DESCRIPTIONS
+   ================================================================= */
+
+.form-table .description {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-top: 8px;
+    font-style: normal;
+}
+
+/* =================================================================
+   SUBMIT BUTTONS
+   ================================================================= */
+
+.submit .button-primary {
+    background: var(--pp-primary-gradient) !important;
+    border: none !important;
+    color: white !important;
+    padding: 12px 24px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    border-radius: var(--pp-radius-md) !important;
+    box-shadow: var(--pp-shadow-sm) !important;
+    transition: all 0.2s ease !important;
+    text-shadow: none !important;
+    height: auto !important;
+}
+
+.submit .button-primary:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: var(--pp-shadow-md) !important;
+}
+
+.submit .button-primary:active {
+    transform: translateY(0) !important;
+}
+
+/* =================================================================
+   SECTION HEADINGS
+   ================================================================= */
+
+h2.title {
+    color: #1e293b;
+    font-size: 18px;
+    font-weight: 700;
+    border-bottom: 2px solid var(--pp-glass-border);
+    padding-bottom: 12px;
+    margin-top: 32px;
+}
+
+h3 {
+    color: #374151;
+    font-weight: 600;
+}
+
+/* =================================================================
+   NOTICE/SUCCESS MESSAGES
+   ================================================================= */
+
+.notice,
+.updated,
+.error {
+    border-left: 4px solid var(--pp-primary) !important;
+    border-radius: var(--pp-radius-md) !important;
+    box-shadow: var(--pp-shadow-sm) !important;
+}
+
+.notice.notice-success,
+.updated {
+    border-left-color: var(--pp-success) !important;
+    background: rgba(67, 233, 123, 0.05) !important;
+}
+
+.notice.notice-error,
+.error {
+    border-left-color: var(--pp-error) !important;
+    background: rgba(255, 107, 107, 0.05) !important;
+}
+
+.notice.notice-warning {
+    border-left-color: var(--pp-warning) !important;
+    background: rgba(255, 217, 61, 0.05) !important;
+}
+
+/* =================================================================
+   SETTINGS TABS (if using tabbed interface)
+   ================================================================= */
+
+.nav-tab-wrapper {
+    border-bottom: 2px solid var(--pp-glass-border);
+    margin-bottom: 24px;
+}
+
+.nav-tab {
+    border: none !important;
+    background: transparent !important;
+    color: #64748b !important;
+    font-weight: 600 !important;
+    padding: 12px 20px !important;
+    margin: 0 !important;
+    transition: all 0.2s ease !important;
+}
+
+.nav-tab:hover {
+    background: var(--pp-glass-bg) !important;
+    color: var(--pp-primary) !important;
+}
+
+.nav-tab-active {
+    background: transparent !important;
+    color: var(--pp-primary) !important;
+    border-bottom: 3px solid var(--pp-primary) !important;
+    margin-bottom: -2px !important;
+}
+
+/* =================================================================
+   CUSTOM SECTIONS (API Keys, etc.)
+   ================================================================= */
+
+/* API Key section styling */
+.form-table tr:has(input[name*="api_key"]) {
+    background: var(--pp-glass-bg);
+}
+
+/* Highlight important settings */
+.form-table tr:has(input[name*="enable"]) td {
+    font-weight: 500;
+}
+
+/* =================================================================
+   COLLAPSIBLE SECTIONS
+   ================================================================= */
+
+details {
+    background: var(--pp-glass-bg);
+    border: 1px solid var(--pp-glass-border);
+    border-radius: var(--pp-radius-md);
+    padding: 16px;
+    margin: 16px 0;
+}
+
+summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #374151;
+    padding: 4px 0;
+    user-select: none;
+}
+
+summary:hover {
+    color: var(--pp-primary);
+}
+
+details[open] summary {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--pp-glass-border);
+}
+
+/* =================================================================
+   INFORMATION/HELP BOXES
+   ================================================================= */
+
+.postbox {
+    background: #fff !important;
+    border: 1px solid var(--pp-glass-border) !important;
+    border-radius: var(--pp-radius-lg) !important;
+    box-shadow: var(--pp-shadow-sm) !important;
+    margin-top: 20px !important;
+}
+
+.postbox .inside {
+    padding: 20px !important;
+    margin: 0 !important;
+}
+
+.postbox h2,
+.postbox h3 {
+    padding: 16px 20px !important;
+    margin: 0 !important;
+    border-bottom: 1px solid var(--pp-glass-border) !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+}
+
+/* =================================================================
+   CODE BLOCKS (for API keys, examples, etc.)
+   ================================================================= */
+
+code,
+pre {
+    background: var(--pp-glass-bg) !important;
+    border: 1px solid var(--pp-glass-border) !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    font-size: 13px !important;
+    color: var(--pp-primary) !important;
+    font-family: 'Courier New', Courier, monospace !important;
+}
+
+pre {
+    padding: 12px !important;
+    overflow-x: auto;
+    line-height: 1.6;
+}
+
+/* =================================================================
+   LINKS
+   ================================================================= */
+
+.form-table a,
+.postbox a {
+    color: var(--pp-primary) !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    transition: color 0.2s ease !important;
+}
+
+.form-table a:hover,
+.postbox a:hover {
+    color: #5568d3 !important;
+    text-decoration: underline !important;
+}
+
+/* =================================================================
+   RESPONSIVE DESIGN
+   ================================================================= */
+
+@media (max-width: 768px) {
+    .form-table th,
+    .form-table td {
+        display: block;
+        width: 100%;
+        padding: 12px;
+    }
+
+    .form-table th {
+        border-bottom: none;
+        padding-bottom: 4px;
+    }
+
+    .form-table td {
+        padding-top: 4px;
+    }
+}
+
+/* =================================================================
+   ACCESSIBILITY
+   ================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+*:focus-visible {
+    outline: 2px solid var(--pp-primary) !important;
+    outline-offset: 2px !important;
+}
