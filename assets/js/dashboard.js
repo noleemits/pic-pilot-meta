@@ -467,7 +467,7 @@
         loadIssueForFix: function(issueId, imageId) {
             const modalContent = $('.fix-issue-content');
             modalContent.html('<div class="loading">Loading issue details...</div>');
-            $('#fix-issue-modal').fadeIn();
+            $('#fix-issue-modal').css('display', 'flex').hide().fadeIn(300);
             
             // Check if this is a virtual image (URL-based)
             const isVirtual = typeof imageId === 'string' && imageId.startsWith('url_');
