@@ -736,6 +736,55 @@
     margin-bottom: 20px;
 }
 
+.pic-pilot-modal .issue-status p {
+    font-size: 14px;
+    color: #374151;
+    margin: 0;
+}
+
+.pic-pilot-modal .issue-status strong {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.pic-pilot-modal .missing-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 6px;
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.pic-pilot-modal .fix-methods {
+    margin-top: 24px;
+}
+
+.pic-pilot-modal .fix-methods > h5 {
+    margin: 0 0 20px 0;
+    color: #1e293b;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.pic-pilot-modal .fix-method-group {
+    margin-bottom: 24px;
+    padding: 20px;
+    background: var(--pp-glass-bg);
+    border: 1px solid var(--pp-glass-border);
+    border-radius: var(--pp-radius-md);
+}
+
+.pic-pilot-modal .fix-method-group h6 {
+    margin: 0 0 16px 0;
+    color: #374151;
+    font-size: 15px;
+    font-weight: 700;
+}
+
 .pic-pilot-modal .fix-instructions {
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
     border: 1px solid var(--pp-glass-border);
