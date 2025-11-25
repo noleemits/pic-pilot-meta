@@ -129,32 +129,36 @@ class DatabaseManager {
     
     public static function get_scan_results($scan_id, $filters = [], $page = 1, $per_page = 25) {
         global $wpdb;
-        
+
         $table = $wpdb->prefix . 'picpilot_scan_results';
         $where_clauses = ['scan_id = %s'];
         $where_values = [$scan_id];
-        
+
+        // IMPORTANT: Only return images with actual issues (not complete images)
+        // An image has issues if alt_text is missing/empty OR title_attr is missing/empty
+        $where_clauses[] = "(alt_text_status != 'present' OR title_attr_status != 'present')";
+
         // Apply filters
         if (!empty($filters['alt_status'])) {
             $where_clauses[] = 'alt_text_status = %s';
             $where_values[] = $filters['alt_status'];
         }
-        
+
         if (!empty($filters['title_status'])) {
             $where_clauses[] = 'title_attr_status = %s';
             $where_values[] = $filters['title_status'];
         }
-        
+
         if (!empty($filters['priority'])) {
             $where_clauses[] = 'priority_score >= %d';
             $where_values[] = $filters['priority'];
         }
-        
+
         if (!empty($filters['page_type'])) {
             $where_clauses[] = 'page_type = %s';
             $where_values[] = $filters['page_type'];
         }
-        
+
         $where_sql = 'WHERE ' . implode(' AND ', $where_clauses);
         
         // Get total count
