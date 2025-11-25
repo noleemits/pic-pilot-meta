@@ -21,16 +21,18 @@
             $('#view-issues').on('click', this.showIssues.bind(this));
             $('#export-report').on('click', this.exportReport.bind(this));
             $('#apply-filters').on('click', this.applyFilters.bind(this));
-            $('#close-fix-modal').on('click', this.closeFixModal.bind(this));
-            
+
             // Search functionality
             $('#search-issues').on('input', this.debounce(this.applyFilters.bind(this), 500));
-            
+
             // Filter change handlers
             $('#filter-priority, #filter-attribute, #filter-page-type').on('change', this.applyFilters.bind(this));
-            
+
             // Fix button handler (delegated for dynamically added buttons)
             $(document).on('click', '.fix-issue-btn', this.showFixModal.bind(this));
+
+            // Close modal handlers (delegated for both static and dynamic buttons)
+            $(document).on('click', '#close-fix-modal, .modal-close', this.closeFixModal.bind(this));
 
             // Remove scan handler
             $(document).on('click', '.remove-scan', this.removeScan.bind(this));
@@ -442,19 +444,22 @@
         
         showFixModal: function(e) {
             e.preventDefault();
-            
-            const $button = $(e.target);
+
+            // Use currentTarget to ensure we get the button element, not child elements
+            const $button = $(e.currentTarget);
             const issueId = $button.data('issue-id');
             const imageId = $button.data('image-id');
-            
+
+            console.log('Fix button clicked', {issueId, imageId, button: $button[0]});
+
             if (!issueId || !imageId) {
                 this.showNotification(
-                    'Missing issue data - This may be a broken image reference from a page builder. Please check your page content and remove any empty image widgets.', 
+                    'Missing issue data - This may be a broken image reference from a page builder. Please check your page content and remove any empty image widgets.',
                     'info'
                 );
                 return;
             }
-            
+
             // Load issue details and show modal
             this.loadIssueForFix(issueId, imageId);
         },
