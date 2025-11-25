@@ -194,8 +194,35 @@ class ScanController {
             $result['image_size_formatted'] = size_format($result['image_filesize']);
             $result['priority_label'] = self::get_priority_label($result['priority_score']);
             $result['status_labels'] = self::get_status_labels($result['alt_text_status'], $result['title_attr_status']);
+
+            // Check if image file exists on disk (for non-virtual images)
+            $is_virtual = !empty($result['is_virtual']);
+            if (!$is_virtual && !empty($result['image_id'])) {
+                $file_path = get_attached_file($result['image_id']);
+                $result['file_exists'] = !empty($file_path) && file_exists($file_path);
+
+                // Add image description/caption if available
+                $attachment_post = get_post($result['image_id']);
+                if ($attachment_post) {
+                    $caption = wp_get_attachment_caption($result['image_id']);
+                    $description = $attachment_post->post_content;
+
+                    // Use caption if available, otherwise use description
+                    if (!empty($caption)) {
+                        $result['image_description'] = $caption;
+                    } elseif (!empty($description)) {
+                        $result['image_description'] = $description;
+                    } else {
+                        // Use filename as fallback
+                        $result['image_description'] = !empty($result['image_filename']) ? $result['image_filename'] : 'No description';
+                    }
+                }
+            } else {
+                $result['file_exists'] = true; // Virtual images (URLs) don't have files to check
+                $result['image_description'] = $is_virtual ? 'External image (URL)' : 'Unknown';
+            }
         }
-        
+
         wp_send_json_success($results);
     }
     

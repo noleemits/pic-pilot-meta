@@ -270,14 +270,14 @@
 
         // Create "Generate Both" section conditionally
         const generateBothSection = showGenerateBoth && !isSVG ? `
-            <div style="margin-bottom: 15px; padding: 12px; background: #fff8e1; border: 1px solid #ffcc02; border-radius: 6px; text-align: center;">
-                <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <button type="button" id="pic-pilot-generate-both" data-attachment-id="${attachmentId}" style="background: #ffcc02; color: #333; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">
+            <div style="margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, rgba(255, 193, 7, 0.05), rgba(255, 152, 0, 0.05)); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 8px; text-align: center;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
+                    <button type="button" id="pic-pilot-generate-both" data-attachment-id="${attachmentId}" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3); transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(251, 191, 36, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(251, 191, 36, 0.3)'">
                         ⚡ Generate Both
                     </button>
-                    <span style="font-size: 12px; color: #666;">Title + Alt Text</span>
+                    <span style="font-size: 13px; color: #92400e; font-weight: 600;">Title + Alt Text</span>
                 </div>
-                <div id="pic-pilot-both-status" style="margin-top: 8px; padding: 6px; border-radius: 4px; font-size: 11px; display: none;"></div>
+                <div id="pic-pilot-both-status" style="margin-top: 8px; padding: 8px; border-radius: 6px; font-size: 12px; display: none;"></div>
             </div>
         ` : '';
         

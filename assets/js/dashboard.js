@@ -252,14 +252,22 @@
         },
         
         renderIssueRow: function(issue) {
-            const statusBadges = issue.status_labels.map(label => 
+            const statusBadges = issue.status_labels.map(label =>
                 `<span class="status-badge ${this.getStatusClass(label)}">${label}</span>`
             ).join(' ');
-            
+
             const priorityClass = issue.priority_label.toLowerCase();
-            
+
+            // Check if file exists and add warning badge if missing
+            const fileExistsWarning = issue.file_exists === false ?
+                '<span class="status-badge status-error" style="background: rgba(255, 107, 107, 0.1); color: #dc2626; border: 1px solid rgba(255, 107, 107, 0.2);">⚠️ File Not Found</span>' : '';
+
+            // Add image description if available
+            const imageDescription = issue.image_description && issue.image_description !== 'No description' ?
+                `<div class="image-description" style="margin-top: 4px; font-size: 12px; color: #64748b; font-style: italic;">${issue.image_description}</div>` : '';
+
             return `
-                <tr data-issue-id="${issue.id}">
+                <tr data-issue-id="${issue.id}" ${issue.file_exists === false ? 'style="background: rgba(255, 107, 107, 0.02);"' : ''}>
                     <td class="column-page">
                         <strong><a href="${issue.page_url}" target="_blank">${issue.page_title}</a></strong>
                         <div class="page-meta">${issue.page_type} • ${issue.formatted_date}</div>
@@ -268,10 +276,12 @@
                         <div class="image-info">
                             <strong>${issue.image_filename}</strong>
                             <div class="image-meta">${issue.image_width}x${issue.image_height} • ${issue.image_size_formatted}</div>
+                            ${imageDescription}
                         </div>
                     </td>
                     <td class="column-status">
                         ${statusBadges}
+                        ${fileExistsWarning}
                     </td>
                     <td class="column-context">
                         ${issue.section_heading ? `<strong>${issue.section_heading}</strong><br>` : ''}
@@ -282,9 +292,10 @@
                         <span class="priority-badge priority-${priorityClass}">${issue.priority_label}</span>
                     </td>
                     <td class="column-actions">
-                        <button type="button" class="button button-small fix-issue-btn" 
-                                data-issue-id="${issue.id}" data-image-id="${issue.image_id}">
-                            Fix Now
+                        <button type="button" class="button button-small fix-issue-btn"
+                                data-issue-id="${issue.id}" data-image-id="${issue.image_id}"
+                                ${issue.file_exists === false ? 'disabled title="File not found on disk"' : ''}>
+                            ${issue.file_exists === false ? 'File Missing' : 'Fix Now'}
                         </button>
                         <a href="${issue.page_url}" target="_blank" class="button button-small">View Page</a>
                     </td>

@@ -205,17 +205,29 @@
         if (file.ai_results && Object.keys(file.ai_results).length > 0) {
             aiResultsHtml = '<div class="ai-results-summary">';
             aiResultsHtml += '<strong>✅ AI Generated Content:</strong><br>';
-            
+
             if (file.ai_results.alt) {
-                aiResultsHtml += `<div class="success-item">📝 Alt Text: ${file.ai_results.alt}</div>`;
+                const altData = file.ai_results.alt;
+                if (typeof altData === 'object' && altData.new) {
+                    const oldText = altData.old || '(none)';
+                    aiResultsHtml += `<div class="success-item">📝 Alt Text: <span class="old-value">${oldText}</span> → <span class="new-value">${altData.new}</span></div>`;
+                } else {
+                    aiResultsHtml += `<div class="success-item">📝 Alt Text: ${altData}</div>`;
+                }
             }
             if (file.ai_results.title) {
-                aiResultsHtml += `<div class="success-item">📋 Title: ${file.ai_results.title}</div>`;
+                const titleData = file.ai_results.title;
+                if (typeof titleData === 'object' && titleData.new) {
+                    const oldText = titleData.old || '(none)';
+                    aiResultsHtml += `<div class="success-item">📋 Title: <span class="old-value">${oldText}</span> → <span class="new-value">${titleData.new}</span></div>`;
+                } else {
+                    aiResultsHtml += `<div class="success-item">📋 Title: ${titleData}</div>`;
+                }
             }
             if (file.ai_results.filename) {
-                aiResultsHtml += `<div class="success-item">📁 Filename: ${file.ai_results.filename.original} → ${file.ai_results.filename.new}</div>`;
+                aiResultsHtml += `<div class="success-item">📁 Filename: <span class="old-value">${file.ai_results.filename.original}</span> → <span class="new-value">${file.ai_results.filename.new}</span></div>`;
             }
-            
+
             aiResultsHtml += '</div>';
         }
 

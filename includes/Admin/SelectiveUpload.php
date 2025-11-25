@@ -295,40 +295,31 @@ class SelectiveUpload {
 
                 // Automatically generate AI content BEFORE wp_generate_attachment_metadata()
                 // This ensures the file is renamed before optimization plugins process it
-                // NOTE: Automatic Upload Area respects the same settings as regular uploads
+                // NOTE: Automatic Upload Area ALWAYS generates all three (alt, title, filename)
+                // regardless of general upload settings - that's the whole purpose of the automatic area
                 $ai_results = [];
                 $original_filename = basename($movefile['file']);
+                $original_alt = get_post_meta($attachment_id, '_wp_attachment_image_alt', true);
+                $original_title = get_the_title($attachment_id);
                 $current_file_path = $movefile['file'];
 
-                // Get upload settings to respect user preferences
-                $generate_alt_on_upload = Settings::get('generate_alt_on_upload');
-                $generate_title_on_upload = Settings::get('generate_title_on_upload');
-
-                Logger::log("[AUTOMATIC_UPLOAD] Settings - Alt: " . ($generate_alt_on_upload ? 'enabled' : 'disabled') . ", Title: " . ($generate_title_on_upload ? 'enabled' : 'disabled'));
+                Logger::log("[AUTOMATIC_UPLOAD] Starting automatic AI generation for #{$attachment_id} (always generates all three regardless of settings)");
 
                 try {
-                    // Generate alt text (only if enabled in settings)
-                    if ($generate_alt_on_upload) {
-                        $alt_result = MetadataGenerator::generate($attachment_id, 'alt', '');
-                        if (!is_wp_error($alt_result) && !empty($alt_result)) {
-                            update_post_meta($attachment_id, '_wp_attachment_image_alt', $alt_result);
-                            $ai_results['alt'] = $alt_result;
-                            Logger::log("[AUTOMATIC_UPLOAD] Generated alt text for #{$attachment_id}: '{$alt_result}'");
-                        }
-                    } else {
-                        Logger::log("[AUTOMATIC_UPLOAD] Alt text generation skipped (disabled in settings)");
+                    // Always generate alt text in automatic mode
+                    $alt_result = MetadataGenerator::generate($attachment_id, 'alt', '');
+                    if (!is_wp_error($alt_result) && !empty($alt_result)) {
+                        update_post_meta($attachment_id, '_wp_attachment_image_alt', $alt_result);
+                        $ai_results['alt'] = ['old' => $original_alt, 'new' => $alt_result];
+                        Logger::log("[AUTOMATIC_UPLOAD] Generated alt text for #{$attachment_id}: '{$alt_result}'");
                     }
 
-                    // Generate title (only if enabled in settings)
-                    if ($generate_title_on_upload) {
-                        $title_result = MetadataGenerator::generate($attachment_id, 'title', '');
-                        if (!is_wp_error($title_result) && !empty($title_result)) {
-                            wp_update_post(['ID' => $attachment_id, 'post_title' => $title_result]);
-                            $ai_results['title'] = $title_result;
-                            Logger::log("[AUTOMATIC_UPLOAD] Generated title for #{$attachment_id}: '{$title_result}'");
-                        }
-                    } else {
-                        Logger::log("[AUTOMATIC_UPLOAD] Title generation skipped (disabled in settings)");
+                    // Always generate title in automatic mode
+                    $title_result = MetadataGenerator::generate($attachment_id, 'title', '');
+                    if (!is_wp_error($title_result) && !empty($title_result)) {
+                        wp_update_post(['ID' => $attachment_id, 'post_title' => $title_result]);
+                        $ai_results['title'] = ['old' => $original_title, 'new' => $title_result];
+                        Logger::log("[AUTOMATIC_UPLOAD] Generated title for #{$attachment_id}: '{$title_result}'");
                     }
 
                     // Generate intelligent filename BEFORE wp_generate_attachment_metadata()

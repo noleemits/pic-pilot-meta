@@ -601,13 +601,14 @@
 .pic-pilot-meta .picpilot-button-group .button-primary:hover {
     transform: translateY(-1px) !important;
     box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3) !important;
-    color: white;
+    background: var(--pp-primary-gradient) !important;
+    color: white !important;
 }
 
 .pic-pilot-meta .picpilot-button-group .button.button-secondary:hover {
-    background-color: #6b7280 !important;
-    border-color: #6b7280 !important;
-    color: white !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 6px rgba(107, 114, 128, 0.2) !important;
+    /* Keep the same background color on hover for readability */
 }
 
 /* =================================================================
