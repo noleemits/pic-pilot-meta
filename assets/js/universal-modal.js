@@ -613,33 +613,44 @@
         return '';
     }
     
+    // Helper to get AJAX config - supports both picPilotUniversal (enqueued) and picPilotAttachment (inline)
+    function getAjaxConfig() {
+        const config = window.picPilotUniversal || window.picPilotAttachment || {};
+        return {
+            ajax_url: config.ajax_url || '/wp-admin/admin-ajax.php',
+            nonce: config.nonce || ''
+        };
+    }
+
     // AI Generation functions - these will call the actual AJAX endpoints
     async function generateUniversalMetadata(type, attachmentId) {
         const button = document.getElementById(`pic-pilot-generate-${type}`);
         const statusEl = document.getElementById(`pic-pilot-${type}-status`);
         const keywordsInput = document.getElementById('pic-pilot-universal-keywords');
-        
+
         if (!button || !statusEl) {
             return;
         }
-        
+
         const keywords = keywordsInput ? keywordsInput.value.trim() : '';
         const originalText = button.textContent;
-        
+
         // Update UI
         button.disabled = true;
         button.textContent = 'Generating...';
         showUniversalStatus(statusEl, `Generating ${type}...`, 'info');
-        
+
+        const ajaxConfig = getAjaxConfig();
+
         try {
             // Use different action for 'both' type
             const action = type === 'both' ? 'picpilot_generate_both' : 'picpilot_generate_metadata';
-            const response = await fetch(window.picPilotAttachment.ajax_url, {
+            const response = await fetch(ajaxConfig.ajax_url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
                     action: action,
-                    nonce: window.picPilotAttachment.nonce,
+                    nonce: ajaxConfig.nonce,
                     attachment_id: attachmentId,
                     type: type,
                     keywords: keywords
@@ -738,14 +749,16 @@
         button.disabled = true;
         button.textContent = 'Duplicating...';
         showUniversalStatus(statusEl, 'Creating duplicate image...', 'info');
-        
+
+        const ajaxConfig = getAjaxConfig();
+
         try {
-            const response = await fetch(window.picPilotUniversal.ajax_url, {
+            const response = await fetch(ajaxConfig.ajax_url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
                     action: 'pic_pilot_duplicate_image',
-                    nonce: window.picPilotUniversal.nonce,
+                    nonce: ajaxConfig.nonce,
                     attachment_id: attachmentId,
                     new_title: 'generate',
                     new_alt: 'generate',
@@ -798,14 +811,16 @@
         button.textContent = 'Generating...';
         showUniversalStatus(statusEl, 'Generating new filename...', 'info');
         
+        const ajaxConfig = getAjaxConfig();
+
         try {
             // First, generate a new filename
-            const response = await fetch(window.picPilotAttachment.ajax_url, {
+            const response = await fetch(ajaxConfig.ajax_url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
                     action: 'picpilot_generate_ai_filename',
-                    nonce: window.picPilotAttachment.nonce,
+                    nonce: ajaxConfig.nonce,
                     attachment_id: attachmentId,
                     keywords: keywords
                 })
@@ -873,15 +888,17 @@
     // Function to proceed with rename after user confirmation
     async function proceedWithRename(attachmentId, newFilename, statusEl) {
         showUniversalStatus(statusEl, 'Checking image usage...', 'info');
-        
+
+        const ajaxConfig = getAjaxConfig();
+
         try {
             // First check if image is in use
-            const usageResponse = await fetch(window.picPilotAttachment.ajax_url, {
+            const usageResponse = await fetch(ajaxConfig.ajax_url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
                     action: 'picpilot_check_image_usage',
-                    nonce: window.picPilotAttachment.nonce,
+                    nonce: ajaxConfig.nonce,
                     attachment_id: attachmentId
                 })
             });
@@ -912,14 +929,14 @@
             
             if (proceed) {
                 showUniversalStatus(statusEl, 'Renaming file...', 'info');
-                
+
                 // Proceed with rename
-                const renameResponse = await fetch(window.picPilotAttachment.ajax_url, {
+                const renameResponse = await fetch(ajaxConfig.ajax_url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({
                         action: 'picpilot_rename_filename',
-                        nonce: window.picPilotAttachment.nonce,
+                        nonce: ajaxConfig.nonce,
                         attachment_id: attachmentId,
                         new_filename: newFilename.trim(),
                         force_rename: !usageData.is_safe_to_rename ? 'true' : 'false'
